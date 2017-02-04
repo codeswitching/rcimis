@@ -1,6 +1,6 @@
 ### CIMIS Data Import
 ### Lauren Steely, MWD
-### January 2017
+### February 2017
 
 # Defines function fetch_cimis(), which downloads CIMIS data using the web API for a specified period, for the specified stations, and returns the data as a tidy data frame. Requires an API key (a character string) which can be obtained from the CIMIS website after registering.
 
