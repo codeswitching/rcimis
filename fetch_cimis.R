@@ -2,7 +2,10 @@
 ### Lauren Steely, MWD
 ### February 2017
 
-# Defines function fetch_cimis(), which downloads CIMIS data using the web API for a specified period, for the specified stations, and returns the data as a tidy data frame. Requires an API key (a character string) which can be obtained from the CIMIS website after registering.
+# Defines function fetch_cimis(), which downloads CIMIS data using the web API
+# for a specified period, for the specified stations, and returns the data as a
+# tidy data frame. Requires an API key (a character string) which can be
+# obtained from the CIMIS website after registering.
 
 # stations  : one or more station IDs (can be a list object) as either numeric or character
 # startdate : start of time range; a string formatted as "YYYY-MM-DD"
@@ -10,16 +13,17 @@
 # units     : "E" for imperial units or "M" for metric units
 # key       : an API key obtained from the CIMIS website; character string
 
-# Example usage: cimisdata <- fetch_cimis(151, "2015-01-1, "2016-12-31", mykey)
+# Example usage: cimisdata <- fetch_cimis(151, "2015-01-1, "2016-12-31", "M", mykey)
 
 require(httr)   # access web APIs
 
-# Download CIMIS data. We use httr's <GET> function and pass it the URL of the API, a private key (register on CIMIS website to obtain), the station ID, the fields we're interested in, and a date range. The API has a data limit for a single request (if too big it will return http status 400) so we must download in three date-range batches. The responses are returned as JSON objects, nested key-value pairs, and stored as r1, r2 and r3. If successful, http_status(r) will return code "200".
+# Download CIMIS data. We use httr's <GET> function. The API seems to have a data limit for a single request (if too big it will return http status 400) so we will have to add extra processing for longer date ranges, downloading in  date-range batches. The response is returned as a JSON object and stored as r1. If successful, http_status(r) will return code "200".
 
 fetch_cimis <- function(stations, startdate, enddate, units="E", key) {
 
   stations <- as.character(stations)
- # dataitems <- ifelse(type == "daily", "day-air-tmp-avg, day-precip, day-eto", "hly-air-tmp-avg, hly-precip, hly-eto")
+  # dataitems <- ifelse(type=="daily", "day-air-tmp-avg, day-precip, day-eto", "hly-air-tmp-avg, hly-precip, hly-eto")
+
   cat("Downloading CIMIS data...", "\n")
   r1 <- GET("http://et.water.ca.gov/api/data",
             query = list("appKey"        = key,
@@ -35,7 +39,9 @@ fetch_cimis <- function(stations, startdate, enddate, units="E", key) {
   # Then we dive down into the lists and retrieve the Records node, which
   # contains the data as a list of dates, each containing a list of nine fields.
   # Finally, we use <sapply> to iterate through the dates and retrieve the data
-  # in five of the nine fields, storing it in a data frame <cimisdata>.
+  # in five of the nine fields, storing it in a data frame <cimisdata>. At the
+  # moment, this only works for daily data. Future update will work with hourly
+  # data and allow user to specify only specific fields to extract.
 
   cimisdata <- content(r1, "parsed")[[1]][[1]][[1]]$Records # parse JSON data & extract records from the resulting list
   cimisdata <- data.frame(date = as.Date(sapply(cimisdata, function(x) x[[1]])),
@@ -44,7 +50,6 @@ fetch_cimis <- function(stations, startdate, enddate, units="E", key) {
                            dailyETo = as.numeric(sapply(cimisdata, function(x) x[[8]]$Value)),
                            dailyprecip = as.numeric(sapply(cimisdata, function(x) x[[9]]$Value)))
 
-  rm(r1) # clean up
   cat("Downloaded", NROW(cimisdata), "observations")
   return(cimisdata)
 }
