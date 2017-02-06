@@ -1,7 +1,7 @@
 # rcimis
 An R package to download and process CIMIS (California Irrigation Management System) data
 
-Lauren Steely
+*Lauren Steely*
 
 CIMIS is a network of agricultural weather stations throughout California that record hourly data on temperature, precipitation, windspeed, humidity, solar radiation, and reference evapotranspiration. This package provides the fetch_cimis() function to fetch data from the CIMIS API and extract the resulting JSON object into a tidy data frame, without having to know how to use the API, which can be awkward in R.
 
